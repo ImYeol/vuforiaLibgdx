@@ -12,6 +12,7 @@ import android.view.WindowManager;
 import com.github.daemontus.renderer.R;
 import com.vuforia.CameraCalibration;
 import com.vuforia.CameraDevice;
+import com.vuforia.Matrix44F;
 import com.vuforia.PIXEL_FORMAT;
 import com.vuforia.Renderer;
 import com.vuforia.State;
@@ -60,6 +61,11 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
         // Stores orientation
         private boolean mIsPortrait = false;
 
+        // Stores the projection matrix to use for rendering purposes
+        private Matrix44F mProjectionMatrix;
+
+        // Stores viewport to be used for rendering purposes
+        private int[] mViewport;
 
         public AppSession(SessionControl sessionControl)
         {
@@ -274,8 +280,22 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
         {
             // configure video background
             configureVideoBackground();
+
+            setProjectionMatrix();
         }
 
+    }
+
+    // Gets the projection matrix to be used for rendering
+    public Matrix44F getProjectionMatrix()
+    {
+        return mProjectionMatrix;
+    }
+
+    // Gets the viewport to be used fo rendering
+    public int[] getViewport()
+    {
+        return mViewport;
     }
 
     public void onSurfaceChanged(int width, int height)

@@ -19,6 +19,7 @@ import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
 import com.vuforia.ObjectTracker;
 import com.vuforia.State;
+import com.vuforia.Trackable;
 import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
 
@@ -33,6 +34,8 @@ public class ArActivity extends AndroidApplication implements SessionControl {
     private Engine mEngine;
 
     VuforiaRenderer mRenderer;
+
+    private boolean mExtendedTracking = false;
 
 
     @Override
@@ -273,5 +276,49 @@ public class ArActivity extends AndroidApplication implements SessionControl {
 
     @Override
     public void onQCARUpdate(State state) {
+        TrackerManager trackerManager = TrackerManager.getInstance();
+        ObjectTracker objectTracker = (ObjectTracker) trackerManager
+                .getTracker(ObjectTracker.getClassType());
+
+        if (refFreeFrame.hasNewTrackableSource())
+        {
+            Log.d(LOGTAG,
+                    "Attempting to transfer the trackable source to the dataset");
+
+            // Deactivate current dataset
+            objectTracker.deactivateDataSet(objectTracker.getActiveDataSet());
+
+            // Clear the oldest target if the dataset is full or the dataset
+            // already contains five user-defined targets.
+            if (dataSetUserDef.hasReachedTrackableLimit()
+                    || dataSetUserDef.getNumTrackables() >= 5)
+                dataSetUserDef.destroy(dataSetUserDef.getTrackable(0));
+
+            if (mExtendedTracking && dataSetUserDef.getNumTrackables() > 0)
+            {
+                // We need to stop the extended tracking for the previous target
+                // so we can enable it for the new one
+                int previousCreatedTrackableIndex =
+                        dataSetUserDef.getNumTrackables() - 1;
+
+                objectTracker.resetExtendedTracking();
+                dataSetUserDef.getTrackable(previousCreatedTrackableIndex)
+                        .stopExtendedTracking();
+            }
+
+            // Add new trackable source
+            Trackable trackable = dataSetUserDef
+                    .createTrackable(refFreeFrame.getNewTrackableSource());
+
+            // Reactivate current dataset
+            objectTracker.activateDataSet(dataSetUserDef);
+
+            if (mExtendedTracking)
+            {
+                trackable.startExtendedTracking();
+            }
+
+        }
+
     }
 }
