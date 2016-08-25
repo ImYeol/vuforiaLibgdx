@@ -14,14 +14,12 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
 
-import com.github.daemontus.ar.vuforia.UserDefinedTarget.SampleApplicationSession;
-import com.github.daemontus.ar.vuforia.UserDefinedTarget.UserDefinedTargets;
+import com.badlogic.gdx.graphics.Texture;
+import com.github.daemontus.renderer.ArActivity;
 import com.vuforia.Matrix44F;
 import com.vuforia.Renderer;
 import com.vuforia.Vec4F;
 import com.vuforia.VideoBackgroundConfig;
-import com.vuforia.samples.SampleApplication.utils.SampleUtils;
-import com.vuforia.samples.SampleApplication.utils.Texture;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -33,8 +31,8 @@ public class RefFreeFrameGL
     
     private static final String LOGTAG = "RefFreeFrameGL";
     
-    UserDefinedTargets mActivity;
-    SampleApplicationSession vuforiaAppSession;
+    ArActivity mActivity;
+    AppSession vuforiaAppSession;
     
     private final class TEXTURE_NAME
     {
@@ -49,10 +47,6 @@ public class RefFreeFrameGL
     }
     
     // OpenGL handles for the various shader related variables
-    private int shaderProgramID; // The Shaders themselves
-    private int vertexHandle; // Handle to the Vertex Array
-    private int textureCoordHandle; // Handle to the Texture Coord Array
-    private int colorHandle; // Handle to the color vector
     private int mvpMatrixHandle; // Handle to the product of the Projection
                                  // and Modelview Matrices
     
@@ -78,31 +72,14 @@ public class RefFreeFrameGL
     
     // Portrait/Landscape status detected in init()
     boolean isActivityPortrait;
+
     
-    String frameVertexShader = " \n" + "attribute vec4 vertexPosition; \n"
-        + "attribute vec2 vertexTexCoord; \n" + "\n"
-        + "varying vec2 texCoord; \n" + "\n"
-        + "uniform mat4 modelViewProjectionMatrix; \n" + "\n"
-        + "void main() \n" + "{ \n"
-        + "gl_Position = modelViewProjectionMatrix * vertexPosition; \n"
-        + "texCoord = vertexTexCoord; \n" + "} \n";
-    
-    String frameFragmentShader = " \n" + "precision mediump float; \n" + "\n"
-        + "varying vec2 texCoord; \n" + "\n"
-        + "uniform sampler2D texSampler2D; \n" + "uniform vec4 keyColor; \n"
-        + "\n" + "void main() \n" + "{ \n"
-        + "vec4 texColor = texture2D(texSampler2D, texCoord); \n"
-        + "gl_FragColor = keyColor * texColor; \n" + "} \n" + "";
-    
-    
-    public RefFreeFrameGL(UserDefinedTargets activity,
-        SampleApplicationSession session)
+    public RefFreeFrameGL(ArActivity activity,
+        AppSession session)
     {
         mActivity = activity;
         vuforiaAppSession = session;
-        shaderProgramID = 0;
-        vertexHandle = 0;
-        textureCoordHandle = 0;
+
         mvpMatrixHandle = 0;
         
         Log.d(LOGTAG, "RefFreeFrameGL Ctor");

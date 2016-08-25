@@ -11,8 +11,8 @@ package com.github.daemontus.ar.vuforia;
 
 import android.util.Log;
 
-import com.github.daemontus.ar.vuforia.UserDefinedTarget.SampleApplicationSession;
-import com.github.daemontus.ar.vuforia.UserDefinedTarget.UserDefinedTargets;
+
+import com.github.daemontus.renderer.ArActivity;
 import com.vuforia.ImageTargetBuilder;
 import com.vuforia.ObjectTracker;
 import com.vuforia.Renderer;
@@ -20,7 +20,7 @@ import com.vuforia.TrackableSource;
 import com.vuforia.TrackerManager;
 import com.vuforia.Vec2F;
 import com.vuforia.VideoBackgroundConfig;
-import com.vuforia.samples.SampleApplication.utils.SampleUtils;
+
 
 
 public class RefFreeFrame
@@ -49,14 +49,13 @@ public class RefFreeFrame
     
     // All rendering methods are contained in this class for easy
     // extraction/abstraction
-    RefFreeFrameGL frameGL;
     
     // The latest trackable source to be extracted from the Target Builder
     TrackableSource trackableSource;
     
-    UserDefinedTargets mActivity;
+    ArActivity mActivity;
     
-    SampleApplicationSession vuforiaAppSession;
+    AppSession vuforiaAppSession;
     
     
     // Function used to transition in the range [0, 1]
@@ -73,8 +72,8 @@ public class RefFreeFrame
     }
     
     
-    public RefFreeFrame(UserDefinedTargets activity,
-        SampleApplicationSession session)
+    public RefFreeFrame(ArActivity activity,
+        AppSession session)
     {
         mActivity = activity;
         vuforiaAppSession = session;
@@ -87,21 +86,21 @@ public class RefFreeFrame
         colorFrame[2] = 0.0f;
         colorFrame[3] = 0.75f;
         
-        frameGL = new RefFreeFrameGL(mActivity, vuforiaAppSession);
+       // frameGL = new RefFreeFrameGL(mActivity, vuforiaAppSession);
         halfScreenSize = new Vec2F();
     }
     
     
-    void init()
+    public void init()
     {
         // load the frame texture
-        frameGL.getTextures();
+    //    frameGL.getTextures();
         
         trackableSource = null;
     }
     
     
-    void deInit()
+    public void deInit()
     {
         TrackerManager trackerManager = TrackerManager.getInstance();
         ObjectTracker objectTracker = (ObjectTracker) (trackerManager
@@ -119,9 +118,9 @@ public class RefFreeFrame
     }
     
     
-    void initGL(int screenWidth, int screenHeight)
+    public void initGL(int screenWidth, int screenHeight)
     {
-        frameGL.init(screenWidth, screenHeight);
+       // frameGL.init(screenWidth, screenHeight);
         
         Renderer renderer = Renderer.getInstance();
         VideoBackgroundConfig vc = renderer.getVideoBackgroundConfig();
@@ -137,16 +136,16 @@ public class RefFreeFrame
         
         reset();
     }
-    
-    
-    void reset()
+
+
+    public void reset()
     {
         curStatus = STATUS.STATUS_IDLE;
         
     }
-    
-    
-    void setCreating()
+
+
+    public void setCreating()
     {
         curStatus = STATUS.STATUS_CREATING;
     }
@@ -219,9 +218,9 @@ public class RefFreeFrame
         
         curStatus = newStatus;
     }
-    
-    
-    void render()
+
+
+    public void render()
     {
         // Get the image tracker
         TrackerManager trackerManager = TrackerManager.getInstance();
@@ -254,19 +253,19 @@ public class RefFreeFrame
         
         }
         
-        SampleUtils.checkGLError("RefFreeFrame render");
+       // SampleUtils.checkGLError("RefFreeFrame render");
     }
-    
-    
+
+
     void renderScanningViewfinder(int quality)
     {
         frameGL.setModelViewScale(2.0f);
         frameGL.setColor(colorFrame);
         frameGL.renderViewfinder();
     }
-    
-    
-    boolean hasNewTrackableSource()
+
+
+    public boolean hasNewTrackableSource()
     {
         return (trackableSource != null);
     }

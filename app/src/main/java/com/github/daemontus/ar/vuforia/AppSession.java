@@ -37,8 +37,10 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
 
         // Flags
         private boolean mStarted = false;
+        private boolean mCameraRunning = false;
 
-        // Display size of the device:
+
+    // Display size of the device:
         private int mScreenWidth = 0;
         private int mScreenHeight = 0;
 
@@ -138,6 +140,14 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
         public void startAR(int camera) throws VuforiaException
         {
             String error;
+            if(mCameraRunning)
+            {
+                error = "Camera already running, unable to open again";
+                Log.e(LOGTAG, error);
+                throw new VuforiaException(
+                    VuforiaException.CAMERA_INITIALIZATION_FAILURE, error);
+             }
+
             mCamera = camera;
             if (!CameraDevice.getInstance().init(camera))
             {
@@ -146,8 +156,6 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
                 throw new VuforiaException(
                         VuforiaException.CAMERA_INITIALIZATION_FAILURE, error);
             }
-
-            configureVideoBackground();
 
             if (!CameraDevice.getInstance().selectVideoMode(
                     CameraDevice.MODE.MODE_DEFAULT))
@@ -158,6 +166,8 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
                         VuforiaException.CAMERA_INITIALIZATION_FAILURE, error);
             }
 
+            configureVideoBackground();
+
             if (!CameraDevice.getInstance().start())
             {
                 error = "Unable to start camera device: " + camera;
@@ -167,17 +177,26 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
             }
 
             setProjectionMatrix();
+
+
             Vuforia.setFrameFormat(PIXEL_FORMAT.RGB565, true);
 
             mSessionControl.doStartTrackers();
 
-            try
+            mCameraRunning = true;
+
+            if(!CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_CONTINUOUSAUTO))
+            {
+                if(!CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_TRIGGERAUTO))
+                    CameraDevice.getInstance().setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_NORMAL);
+            }
+          /*  try
             {
                 setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_TRIGGERAUTO);
             } catch (VuforiaException exceptionTriggerAuto)
             {
                 setFocusMode(CameraDevice.FOCUS_MODE.FOCUS_MODE_NORMAL);
-            }
+            }*/
         }
 
 
@@ -512,10 +531,17 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
 
     private void stopCamera()
     {
-        mSessionControl.doStopTrackers();
+        if (mCameraRunning)
+        {
+            mSessionControl.doStopTrackers();
+            mCameraRunning = false;
+            CameraDevice.getInstance().stop();
+            CameraDevice.getInstance().deinit();
+        }
+        /*mSessionControl.doStopTrackers();
         CameraDevice.getInstance().setFlashTorchMode(false);
         CameraDevice.getInstance().stop();
-        CameraDevice.getInstance().deinit();
+        CameraDevice.getInstance().deinit();*/
 
     }
 
@@ -573,6 +599,14 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
 
         config.setSize(new Vec2I(xSize, ySize));
 
+        // The Vuforia VideoBackgroundConfig takes the position relative to the
+        // centre of the screen, where as the OpenGL glViewport call takes the
+        // position relative to the lower left corner
+        mViewport = new int[4];
+        mViewport[0] = ((mScreenWidth - xSize) / 2) + config.getPosition().getData()[0];
+        mViewport[1] = ((mScreenHeight - ySize) / 2) + config.getPosition().getData()[1];
+        mViewport[2] = xSize;
+        mViewport[3] = ySize;
         Log.i(LOGTAG, "Configure Video Background : Video (" + vm.getWidth()
                 + " , " + vm.getHeight() + "), Screen (" + mScreenWidth + " , "
                 + mScreenHeight + "), mSize (" + xSize + " , " + ySize + ")");

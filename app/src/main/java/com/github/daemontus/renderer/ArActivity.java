@@ -3,7 +3,9 @@ package com.github.daemontus.renderer;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.Toast;
@@ -12,16 +14,19 @@ import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.github.daemontus.ar.libgdx.Engine;
 import com.github.daemontus.ar.vuforia.AppSession;
+import com.github.daemontus.ar.vuforia.RefFreeFrame;
 import com.github.daemontus.ar.vuforia.SessionControl;
 import com.github.daemontus.ar.vuforia.VuforiaException;
 import com.github.daemontus.ar.vuforia.VuforiaRenderer;
 import com.vuforia.CameraDevice;
 import com.vuforia.DataSet;
+import com.vuforia.ImageTargetBuilder;
 import com.vuforia.ObjectTracker;
 import com.vuforia.State;
 import com.vuforia.Trackable;
 import com.vuforia.Tracker;
 import com.vuforia.TrackerManager;
+import com.vuforia.Vuforia;
 
 
 public class ArActivity extends AndroidApplication implements SessionControl {
@@ -30,13 +35,15 @@ public class ArActivity extends AndroidApplication implements SessionControl {
 
     private AppSession session;
 
-    private DataSet dataSetUserDef;
+    private DataSet dataSetUserDef = null;
     private Engine mEngine;
 
     VuforiaRenderer mRenderer;
 
     private boolean mExtendedTracking = false;
+    int targetBuilderCounter = 1;
 
+    public RefFreeFrame refFreeFrame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +54,7 @@ public class ArActivity extends AndroidApplication implements SessionControl {
         session = new AppSession(this);
         session.initAR(this, ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        mRenderer = new VuforiaRenderer(session);
+        mRenderer = new VuforiaRenderer(this,session);
 
         FrameLayout container = (FrameLayout) findViewById(R.id.ar_container);
 
@@ -99,10 +106,35 @@ public class ArActivity extends AndroidApplication implements SessionControl {
         session.onConfigurationChanged();
     }
 
+    // Initializes AR application components.
+    private void initApplicationAR()
+    {
+        // Do application initialization
+        refFreeFrame = new RefFreeFrame(this, session);
+        refFreeFrame.init();
+
+
+        // Create OpenGL ES view:
+        int depthSize = 16;
+        int stencilSize = 0;
+        boolean translucent = Vuforia.requiresAlpha();
+
+       //create GLView and set GLView.Renderer
+
+
+        // startUserDefinedTargets
+        startUserDefinedTargets();
+
+
+
+    }
 
     @Override
     public void onInitARDone(VuforiaException exception) {
         if (exception == null) {
+
+            initApplicationAR();
+
             mRenderer.mIsActive = true;
 
             try {
@@ -145,6 +177,121 @@ public class ArActivity extends AndroidApplication implements SessionControl {
         System.gc();
     }
 
+    boolean startUserDefinedTargets()
+    {
+        Log.d(LOGTAG, "startUserDefinedTargets");
+
+        TrackerManager trackerManager = TrackerManager.getInstance();
+        ObjectTracker objectTracker = (ObjectTracker) (trackerManager
+                .getTracker(ObjectTracker.getClassType()));
+        if (objectTracker != null)
+        {
+            ImageTargetBuilder targetBuilder = objectTracker
+                    .getImageTargetBuilder();
+
+            if (targetBuilder != null)
+            {
+                // if needed, stop the target builder
+                if (targetBuilder.getFrameQuality() != ImageTargetBuilder.FRAME_QUALITY.FRAME_QUALITY_NONE)
+                    targetBuilder.stopScan();
+
+                objectTracker.stop();
+
+                targetBuilder.startScan();
+
+            }
+        } else
+            return false;
+
+        return true;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if( keyCode == KeyEvent.KEYCODE_DPAD_DOWN){
+            if (isUserDefinedTargetsRunning())
+            {
+                // Shows the loading dialog
+             /*   loadingDialogHandler
+                        .sendEmptyMessage(LoadingDialogHandler.SHOW_LOADING_DIALOG);
+*/
+                // Builds the new target
+                startBuild();
+            }
+        }
+        return false;
+    }
+
+    boolean isUserDefinedTargetsRunning()
+    {
+        TrackerManager trackerManager = TrackerManager.getInstance();
+        ObjectTracker objectTracker = (ObjectTracker) trackerManager
+                .getTracker(ObjectTracker.getClassType());
+
+        if (objectTracker != null)
+        {
+            ImageTargetBuilder targetBuilder = objectTracker
+                    .getImageTargetBuilder();
+            if (targetBuilder != null)
+            {
+                Log.e(LOGTAG, "Quality> " + targetBuilder.getFrameQuality());
+                return (targetBuilder.getFrameQuality() != ImageTargetBuilder.FRAME_QUALITY.FRAME_QUALITY_NONE) ? true
+                        : false;
+            }
+        }
+
+        return false;
+    }
+
+    void startBuild()
+    {
+        TrackerManager trackerManager = TrackerManager.getInstance();
+        ObjectTracker objectTracker = (ObjectTracker) trackerManager
+                .getTracker(ObjectTracker.getClassType());
+
+        if (objectTracker != null)
+        {
+            ImageTargetBuilder targetBuilder = objectTracker
+                    .getImageTargetBuilder();
+            if (targetBuilder != null)
+            {
+                if (targetBuilder.getFrameQuality() == ImageTargetBuilder.FRAME_QUALITY.FRAME_QUALITY_LOW)
+                {
+                   // showErrorDialogInUIThread();
+                }
+
+                String name;
+                do
+                {
+                    name = "UserTarget-" + targetBuilderCounter;
+                    Log.d(LOGTAG, "TRYING " + name);
+                    targetBuilderCounter++;
+                } while (!targetBuilder.build(name, 320.0f));
+
+                refFreeFrame.setCreating();
+            }
+        }
+    }
+
+    public void targetCreated()
+    {
+        // Hides the loading dialog
+       /* loadingDialogHandler
+                .sendEmptyMessage(LoadingDialogHandler.HIDE_LOADING_DIALOG);
+*/
+        if (refFreeFrame != null)
+        {
+            refFreeFrame.reset();
+        }
+
+    }
+
+    public void updateRendering()
+    {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        refFreeFrame.initGL(metrics.widthPixels, metrics.heightPixels);
+    }
 
     @Override
     public boolean doInitTrackers() {
@@ -266,6 +413,9 @@ public class ArActivity extends AndroidApplication implements SessionControl {
 
     @Override
     public boolean doDeinitTrackers() {
+
+        if (refFreeFrame != null)
+            refFreeFrame.deInit();
 
         // Deinit the image tracker:
         TrackerManager trackerManager = TrackerManager.getInstance();
