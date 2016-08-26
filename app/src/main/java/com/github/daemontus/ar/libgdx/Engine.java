@@ -24,7 +24,7 @@ public class Engine extends Game {
         Display mDisplay = new Display(vuforiaRenderer);
         setScreen(mDisplay);
         vuforiaRenderer.initRendering();
-        fps = new FPSLogger();
+    //    fps = new FPSLogger();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class Engine extends Game {
     @Override
     public void render () {
         super.render();
-        fps.log();
+     //   fps.log();
     }
 
 }

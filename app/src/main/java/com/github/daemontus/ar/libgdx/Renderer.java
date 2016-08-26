@@ -10,7 +10,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-
 import com.github.daemontus.ar.vuforia.SampleMath;
 import com.github.daemontus.ar.vuforia.VuforiaRenderer;
 import com.vuforia.Matrix44F;
@@ -25,12 +24,15 @@ public class Renderer {
 
     private static final String LOG = "RENDERER";
 
-    private static final float MODEL_SCALE = 8.0f;
+    private static final float MODEL_SCALE = 100.0f;
 
     private PerspectiveCamera camera;
     private Environment lights;
     private ModelBatch modelBatch;
     private VuforiaRenderer vuforiaRenderer;
+
+
+    private float[] data;
 
     public Renderer(VuforiaRenderer arRenderer) {
 
@@ -103,33 +105,46 @@ public class Renderer {
             } else {
                 // Back camera
                 rotated = new float[]{
-                        raw[1], -raw[0], raw[2], raw[3],
-                        raw[5], -raw[4], raw[6], raw[7],
-                        raw[9], -raw[8], raw[10], raw[11],
-                        raw[13], -raw[12], raw[14], raw[15]
+                        -raw[1], raw[0], raw[2], raw[3],
+                        -raw[5], raw[4], raw[6], raw[7],
+                        -raw[9], raw[8], raw[10], raw[11],
+                        -raw[13], raw[12], raw[14], raw[15]
                 };
+            /*    rotated = new float[]{
+                        raw[0], -raw[1], raw[2], raw[3],
+                        raw[4], -raw[5], raw[6], raw[7],
+                        raw[8], -raw[9], raw[10], raw[11],
+                        raw[12], -raw[13], raw[14], raw[15]
+                };*/
             }
             Matrix44F rot = new Matrix44F();
             rot.setData(rotated);
             Matrix44F inverse = SampleMath.Matrix44FInverse(rot);
             Matrix44F transp = SampleMath.Matrix44FTranspose(inverse);
 
-            float[] data = transp.getData();
+            //float[] data = transp.getData();
+            data = transp.getData();
             camera.position.set(data[12], data[13], data[14]);
             camera.up.set(data[4], data[5], data[6]);
             camera.direction.set(data[8], data[9], data[10]);
             //update filed of view
             camera.fieldOfView = filedOfView;
 
-        } else {
+        } /*else {
             camera.position.set(100, 100, 100);
             camera.lookAt(1000,1000,1000);
-        }
+        }*/
+
 
         model.transform.set(new Matrix4());
+        model.transform.setTranslation(-300,0,-50);
+    //    model.transform.setToTranslation(-200,0,1);
         //the model is rotated
-        model.transform.rotate(1.0F, 0.0F, 0.0F, 90.0F);
-        model.transform.rotate(0.0F, 1.0F, 0.0F, 90.0F);
+        model.transform.rotate(1.0F, 0.0F, 0.0F, 180.0F);
+        model.transform.rotate(1.0F, 0.0F, 0.0F, 30.0F);
+        model.transform.rotate(0.0F, 0.0F, 1.0F, 90.0F);
+        model.transform.rotate(0.0F, 1.0F, 0.0F, 40.0F);
+     //   model.transform.rotate(0.0F, 1.0F, 0.0F, 90.0F);
         model.transform.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
 
         camera.update();

@@ -133,6 +133,8 @@ public class AppSession implements Vuforia.UpdateCallbackInterface {
 
             if (vuforiaException != null)
                 mSessionControl.onInitARDone(vuforiaException);
+
+            mViewport = new int[4];
         }
 
 

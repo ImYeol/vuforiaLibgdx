@@ -2,12 +2,18 @@ package com.github.daemontus.renderer;
 
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -40,10 +46,13 @@ public class ArActivity extends AndroidApplication implements SessionControl {
 
     VuforiaRenderer mRenderer;
 
-    private boolean mExtendedTracking = false;
+    private boolean mExtendedTracking = true;
     int targetBuilderCounter = 1;
 
     public RefFreeFrame refFreeFrame;
+
+    private RelativeLayout mLayout;
+    private Button startBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,10 +76,45 @@ public class ArActivity extends AndroidApplication implements SessionControl {
         View glView = initializeForView(mEngine, config);
 
         container.addView(glView);
+        addOverayView();
 
     }
 
+    private void addOverayView() {
 
+        LayoutInflater inflater = LayoutInflater.from(this);
+        mLayout = (RelativeLayout) inflater.inflate(
+                R.layout.button_layout, null, false);
+
+        mLayout.setVisibility(View.VISIBLE);
+
+        // If this is the first time that the application runs then the
+        // uiLayout background is set to BLACK color, will be set to
+        // transparent once the SDK is initialized and camera ready to draw
+
+        mLayout.setBackgroundColor(Color.TRANSPARENT);
+
+        // Adds the inflated layout to the view
+        addContentView(mLayout, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Gets a reference to the bottom navigation bar
+        startBtn=(Button)mLayout.findViewById(R.id.button);
+        startBtn.setVisibility(View.VISIBLE);
+
+
+        mLayout.bringToFront();
+
+        startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(LOGTAG,"onClick");
+                    startBuild();
+            }
+        });
+
+
+    }
 
     @Override
     protected void onResume() {
@@ -124,8 +168,6 @@ public class ArActivity extends AndroidApplication implements SessionControl {
 
         // startUserDefinedTargets
         startUserDefinedTargets();
-
-
 
     }
 
@@ -313,6 +355,17 @@ public class ArActivity extends AndroidApplication implements SessionControl {
         return result;
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        Log.d(LOGTAG,"onTouch"+event.getAction());
+        if(event.getAction() == MotionEvent.ACTION_DOWN){
+            startBuild();
+            Log.d(LOGTAG,"onTouchDown");
+        }
+
+        return false;
+    }
 
     @Override
     public boolean doLoadTrackersData() {
@@ -471,4 +524,5 @@ public class ArActivity extends AndroidApplication implements SessionControl {
         }
 
     }
+
 }

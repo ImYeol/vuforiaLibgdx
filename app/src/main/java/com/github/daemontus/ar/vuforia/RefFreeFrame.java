@@ -85,8 +85,7 @@ public class RefFreeFrame
         colorFrame[1] = 0.0f;
         colorFrame[2] = 0.0f;
         colorFrame[3] = 0.75f;
-        
-       // frameGL = new RefFreeFrameGL(mActivity, vuforiaAppSession);
+
         halfScreenSize = new Vec2F();
     }
     
@@ -246,7 +245,7 @@ public class RefFreeFrame
         switch (curStatus)
         {
             case STATUS_SCANNING:
-                renderScanningViewfinder(frameQuality);
+            //    renderScanningViewfinder(frameQuality);
                 break;
             default:
                 break;
@@ -257,12 +256,12 @@ public class RefFreeFrame
     }
 
 
-    void renderScanningViewfinder(int quality)
+  /*  void renderScanningViewfinder(int quality)
     {
         frameGL.setModelViewScale(2.0f);
         frameGL.setColor(colorFrame);
         frameGL.renderViewfinder();
-    }
+    }*/
 
 
     public boolean hasNewTrackableSource()
@@ -271,7 +270,7 @@ public class RefFreeFrame
     }
     
     
-    TrackableSource getNewTrackableSource()
+    public TrackableSource getNewTrackableSource()
     {
         TrackableSource result = trackableSource;
         trackableSource = null;
