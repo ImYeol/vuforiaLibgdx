@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.github.daemontus.ar.vuforia.SampleMath;
@@ -38,7 +39,9 @@ public class Renderer {
 
         lights = new Environment();
         lights.set(new ColorAttribute(ColorAttribute.AmbientLight, Color.WHITE));
-
+    //    lights.set(new ColorAttribute(ColorAttribute.AmbientLight,0.4f,0.4f,0.4f,1f));
+        lights.add(new DirectionalLight().set(250f,200f,200f,10f,10f,5f));
+    //    lights.add(new SpotLight().set(Co));
         camera = new PerspectiveCamera(60, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.near = 1.0F;
         camera.far = 1000.0F;
@@ -130,20 +133,29 @@ public class Renderer {
             //update filed of view
             camera.fieldOfView = filedOfView;
 
-        } /*else {
+        } else {
             camera.position.set(100, 100, 100);
             camera.lookAt(1000,1000,1000);
-        }*/
+        }
 
 
         model.transform.set(new Matrix4());
-        model.transform.setTranslation(-300,0,-50);
-    //    model.transform.setToTranslation(-200,0,1);
-        //the model is rotated
+        model.transform.setToTranslation(-200,0,1);
         model.transform.rotate(1.0F, 0.0F, 0.0F, 180.0F);
+        model.transform.rotate(0.0F, 0.0F, 1.0F, 90.0F);
+        model.transform.rotate(0.0F, 0.0F, 1.0F, 180.0F);
+    //    model.transform.setTranslation(-300,0,-50);
+    //    model.transform.setToTranslation(-200,0,1);
+
+
+        //the kobugi model is rotated
+  /*      model.transform.rotate(1.0F, 0.0F, 0.0F, 180.0F);
         model.transform.rotate(1.0F, 0.0F, 0.0F, 30.0F);
         model.transform.rotate(0.0F, 0.0F, 1.0F, 90.0F);
         model.transform.rotate(0.0F, 1.0F, 0.0F, 40.0F);
+  */
+
+
      //   model.transform.rotate(0.0F, 1.0F, 0.0F, 90.0F);
         model.transform.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
 

@@ -385,12 +385,7 @@ public class ArActivity extends AndroidApplication implements SessionControl {
             return false;
         }
 
-        // Load the data sets:
-      /*  if (!dataSetUserDef.load("StonesAndChips.xml", STORAGE_TYPE.STORAGE_APPRESOURCE)) {
-            Log.d(LOGTAG, "Failed to load data set.");
-            return false;
-        }
-       */
+
         // Activate the data set:
         if (!imageTracker.activateDataSet(dataSetUserDef)) {
             Log.d(LOGTAG, "Failed to activate data set.");
